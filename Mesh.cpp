@@ -1687,7 +1687,7 @@ CSphereMeshTexturedIlluminated::~CSphereMeshTexturedIlluminated()
  
 ///////////////
 
-CWaterBoxMesh::CWaterBoxMesh(ID3D11Device *pd3dDevice, float fWidth, float fHeight, float fDepth) : CMeshDetailTexturedIlluminated(pd3dDevice)
+CWaterBoxMesh::CWaterBoxMesh(ID3D11Device *pd3dDevice, float fWidth, float fHeight, float fDepth, float fScale) : CMeshDetailTexturedIlluminated(pd3dDevice)
 {
 	// 스카이 박스는 6개의 면(사각형), 사각형은 정점 4개, 그러므로 24개의 정점이 필요하다.
 	m_nVertices = 4;
@@ -1702,13 +1702,13 @@ CWaterBoxMesh::CWaterBoxMesh(ID3D11Device *pd3dDevice, float fWidth, float fHeig
 	 
 	// Top Quad
 	m_pd3dxvPositions[i] = D3DXVECTOR3(-fx, +fy, -fz);
-	pd3dxvTexCoords[i++] = D3DXVECTOR2(0.0f, 5.0f);
+	pd3dxvTexCoords[i++] = D3DXVECTOR2(0.0f, fScale);
 	m_pd3dxvPositions[i] = D3DXVECTOR3(-fx, +fy, +fz);
 	pd3dxvTexCoords[i++] = D3DXVECTOR2(0.0f, 0.0f);
 	m_pd3dxvPositions[i] = D3DXVECTOR3(+fx, +fy, +fz);
-	pd3dxvTexCoords[i++] = D3DXVECTOR2(5.0f, 0.0f);
+	pd3dxvTexCoords[i++] = D3DXVECTOR2(fScale, 0.0f);
 	m_pd3dxvPositions[i] = D3DXVECTOR3(+fx, +fy, -fz);
-	pd3dxvTexCoords[i++] = D3DXVECTOR2(5.0f, 5.0f);
+	pd3dxvTexCoords[i++] = D3DXVECTOR2(fScale, fScale);
 
 	D3D11_BUFFER_DESC d3dBufferDesc;
 	::ZeroMemory(&d3dBufferDesc, sizeof(D3D11_BUFFER_DESC));

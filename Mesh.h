@@ -277,7 +277,7 @@ protected:
 	int							m_nLength; 
 
 public:
-	CWaterBoxMesh(ID3D11Device *pd3dDevice, float fWidth = 20.0f, float fHeight = 20.0f, float fDepth = 20.0f);
+	CWaterBoxMesh(ID3D11Device *pd3dDevice, float fWidth, float fHeight, float fDepth, float fScale );
 	virtual ~CWaterBoxMesh(); 
 };
 

@@ -528,7 +528,7 @@ void CSkyBox::Render(ID3D11DeviceContext *pd3dDeviceContext, CCamera*pCamera)
 CWaterBox::CWaterBox(ID3D11Device *pd3dDevice) : CGameObject(1)
 {
 	// 80ÀÌ Àû´ç?
-	CWaterBoxMesh *pWaterBoxMesh = new CWaterBoxMesh(pd3dDevice, 2000.0f, 80.0f, 2000.0f);
+	CWaterBoxMesh *pWaterBoxMesh = new CWaterBoxMesh(pd3dDevice, 2000.0f, 800.0f, 2000.0f, 5.0f);
 	SetMesh(pWaterBoxMesh, 0);
 };
 

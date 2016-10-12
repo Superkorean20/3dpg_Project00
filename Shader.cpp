@@ -707,6 +707,54 @@ void CWaterBoxShader::BuildObjects(ID3D11Device* pd3dDevice)
 
 	m_ppObjects[0]->SetMaterial(pTerrainMaterial);
 }
+
+void CWaterBoxShader::Render(ID3D11DeviceContext* pd3dDeviceContext, CCamera *pCamera)
+{
+	//OnPrepareRender(pd3dDeviceContext);
+
+	//if (m_pMaterial) CIlluminatedShader::UpdateShaderVariable(pd3dDeviceContext, &m_pMaterial->m_Material);
+
+	//if (m_pTexture) m_pTexture->UpdateShaderVariable(pd3dDeviceContext);
+
+	//int nSphereObjects = m_nObjects / 2;
+
+	//int nSphereInstances = 0;
+	//D3D11_MAPPED_SUBRESOURCE d3dMappedResource;
+	//pd3dDeviceContext->Map(m_pd3dSphereInstanceBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &d3dMappedResource);
+	//D3DXMATRIX *pnSphereInstances = (D3DXMATRIX *)d3dMappedResource.pData;
+	//for (int j = 0; j < nSphereObjects; j++)
+	//{
+	//	if (m_ppObjects[j])
+	//	{
+	//		if (m_ppObjects[j]->IsVisible(pCamera))
+	//		{
+	//			D3DXMatrixTranspose(&pnSphereInstances[nSphereInstances++], &m_ppObjects[j]->m_d3dxmtxWorld);
+	//		}
+	//	}
+	//}
+	//pd3dDeviceContext->Unmap(m_pd3dSphereInstanceBuffer, 0);
+
+	//CMesh *pSphereMesh = m_ppObjects[0]->GetMesh();
+	//pSphereMesh->RenderInstanced(pd3dDeviceContext, nSphereInstances, 0);
+
+	//int nCubeInstances = 0;
+	//pd3dDeviceContext->Map(m_pd3dCubeInstanceBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &d3dMappedResource);
+	//D3DXMATRIX *pCubeInstances = (D3DXMATRIX *)d3dMappedResource.pData;
+	//for (int j = nSphereObjects; j < m_nObjects; j++)
+	//{
+	//	if (m_ppObjects[j])
+	//	{
+	//		if (m_ppObjects[j]->IsVisible(pCamera))
+	//		{
+	//			D3DXMatrixTranspose(&pCubeInstances[nCubeInstances++], &m_ppObjects[j]->m_d3dxmtxWorld);
+	//		}
+	//	}
+	//}
+	//pd3dDeviceContext->Unmap(m_pd3dCubeInstanceBuffer, 0);
+
+	//CMesh *pCubeMesh = m_ppObjects[m_nObjects - 1]->GetMesh();
+	//pCubeMesh->RenderInstanced(pd3dDeviceContext, nCubeInstances, 0);
+}
  
 ////////////////////////////////////////////////////////////////////
 //
