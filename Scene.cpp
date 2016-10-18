@@ -326,4 +326,6 @@ CGameObject *CScene::PickObjectPointedByCursor(int xClient, int yClient)
 		}
 	}
 	return(pNearestObject);
+
+
 }

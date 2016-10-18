@@ -7,7 +7,7 @@
 
 ID3D11Buffer *CShader::m_pd3dcbWorldMatrix = NULL;
 ID3D11Buffer *CIlluminatedShader::m_pd3dcbMaterial = NULL;
-ID3D11Buffer *CTexturedIlluminatedShader::m_pd3dcbTranslation = NULL;
+ID3D11Buffer *CWaterBoxShader::m_pd3dcbTranslation = NULL;
 
 CShader::CShader()
 {
@@ -674,7 +674,7 @@ CWaterBoxShader::~CWaterBoxShader()
 //void CWaterBoxShader::BuildObjects(ID3D11Device* pd3dDevice, CHeightMapTerrain *pHeightMapTerrain)
 void CWaterBoxShader::BuildObjects(ID3D11Device* pd3dDevice)
 {
-	CTexturedIlluminatedShader::CreateShaderVariables(pd3dDevice);
+	CreateShaderVariables(pd3dDevice);
 
 	m_nObjects = 1;
 	m_ppObjects = new CGameObject*[m_nObjects];
@@ -711,6 +711,42 @@ void CWaterBoxShader::BuildObjects(ID3D11Device* pd3dDevice)
 
 	m_ppObjects[0]->SetMaterial(pTerrainMaterial);
 }
+void CWaterBoxShader::CreateShaderVariables(ID3D11Device *pd3dDevice)
+{
+	D3D11_BUFFER_DESC d3dBufferDesc;
+	ZeroMemory(&d3dBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	d3dBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	d3dBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	d3dBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	d3dBufferDesc.ByteWidth = sizeof(TranslateBufferType);
+	pd3dDevice->CreateBuffer(&d3dBufferDesc, NULL, &m_pd3dcbTranslation);
+
+	//ZeroMemory(&d3dBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	//d3dBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	//d3dBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	//d3dBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	//d3dBufferDesc.ByteWidth = sizeof(TransparentBufferType);
+	//pd3dDevice->CreateBuffer(&d3dBufferDesc, NULL, &m_pd3dcbTransparent);
+}
+void CWaterBoxShader::UpdateShaderVariable(ID3D11DeviceContext *pd3dDeviceContext, float translation)
+{
+	D3D11_MAPPED_SUBRESOURCE d3dMappedResource;
+
+	pd3dDeviceContext->Map(m_pd3dcbTranslation, 0, D3D11_MAP_WRITE_DISCARD, 0, &d3dMappedResource);
+	TranslateBufferType *dataPtr = (TranslateBufferType *)d3dMappedResource.pData;
+
+	dataPtr->translation = translation;
+
+	pd3dDeviceContext->Unmap(m_pd3dcbTranslation, 0);
+	pd3dDeviceContext->PSSetConstantBuffers(PS_SLOT_TRANSLATION, 1, &m_pd3dcbTranslation);
+}
+
+
+void CWaterBoxShader::ReleaseShaderVariables()
+{
+	if (m_pd3dcbTranslation) m_pd3dcbTranslation->Release();
+}
+
 void CWaterBoxShader::Render(ID3D11DeviceContext *pd3dDeviceContext, CCamera *pCamera)
 {
 	static float textureTranslation = 0.0f;
@@ -723,7 +759,7 @@ void CWaterBoxShader::Render(ID3D11DeviceContext *pd3dDeviceContext, CCamera *pC
 
 	CShader::OnPrepareRender(pd3dDeviceContext);
 
-	CTexturedIlluminatedShader::UpdateShaderVariable(pd3dDeviceContext, textureTranslation);
+	UpdateShaderVariable(pd3dDeviceContext, textureTranslation);
 
 	m_ppObjects[0]->Render(pd3dDeviceContext, pCamera);
 }
@@ -753,34 +789,6 @@ void CTexturedIlluminatedShader::CreateShader(ID3D11Device *pd3dDevice)
 	CreatePixelShaderFromFile(pd3dDevice, L"Effect.fx", "PSTexturedLightingColor", "ps_5_0", &m_pd3dPixelShader);
 }
  
-void CTexturedIlluminatedShader::CreateShaderVariables(ID3D11Device *pd3dDevice)
-{
-	D3D11_BUFFER_DESC d3dBufferDesc;
-	ZeroMemory(&d3dBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	d3dBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	d3dBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	d3dBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	d3dBufferDesc.ByteWidth = sizeof(TranslateBufferType);
-	pd3dDevice->CreateBuffer(&d3dBufferDesc, NULL, &m_pd3dcbTranslation);
-}
-void CTexturedIlluminatedShader::UpdateShaderVariable(ID3D11DeviceContext *pd3dDeviceContext, float translation)
-{
-	D3D11_MAPPED_SUBRESOURCE d3dMappedResource;
-	pd3dDeviceContext->Map(m_pd3dcbTranslation, 0, D3D11_MAP_WRITE_DISCARD, 0, &d3dMappedResource);
-	TranslateBufferType *dataPtr = (TranslateBufferType *)d3dMappedResource.pData;
-	
-	dataPtr->translation = translation;
-
-	pd3dDeviceContext->Unmap(m_pd3dcbTranslation, 0);
-	pd3dDeviceContext->PSSetConstantBuffers(PS_SLOT_TRANSLATION, 1, &m_pd3dcbTranslation);
-}
-
-void CTexturedIlluminatedShader::ReleaseShaderVariables()
-{
-
-	//	if (m_pd3dcbMaterial) m_pd3dcbMaterial->Release();
-	if (m_pd3dcbTranslation) m_pd3dcbTranslation->Release();
-}
 
 ///////////////////////////
 //

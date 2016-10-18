@@ -343,6 +343,11 @@ cbuffer TranslationBuffer
 	float textureTranslation;
 };
 
+cbuffer TransparentBuffer
+{
+	float blendAmount;
+};
+
  struct VS_TEXTURED_LIGHTING_COLOR_INPUT
 {
 	float3 position : POSITION;
@@ -382,5 +387,6 @@ float4 PSTexturedLightingColor(VS_TEXTURED_LIGHTING_COLOR_OUTPUT input) : SV_Tar
 //	input.texCoord = mul(float4(input.texCoord, 0.0f, 0.0f), float4(textureTranslation, 0.0f, 0.0f, 0.0f)).x;
 	float4 cColor = gtxtTexture.Sample(gSamplerState, input.texCoord) * cIllumination;
 
+	cColor.a = blendAmount;
 	return(cColor);
 }

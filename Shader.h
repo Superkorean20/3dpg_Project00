@@ -30,6 +30,12 @@ struct TranslateBufferType
 	D3DXVECTOR3 padding;
 };
 
+struct TransparentBufferType
+{
+	float blendAmount;
+	D3DXVECTOR3 padding;
+};
+
 class CShader
 {
 public:
@@ -117,13 +123,23 @@ public:
 	virtual ~CTexturedIlluminatedShader();
 
 	virtual void CreateShader(ID3D11Device *pd3dDevice);
+};
 
-	static ID3D11Buffer* m_pd3dcbTranslation; 
+class CWaterBoxShader : public CTexturedIlluminatedShader
+{
+public:
+	CWaterBoxShader();
+	virtual ~CWaterBoxShader();
+
+//	static ID3D11Buffer* m_pd3dcbTransparent;
+	static ID3D11Buffer* m_pd3dcbTranslation;
+
+	virtual void BuildObjects(ID3D11Device *pd3dDevice);
+	virtual void Render(ID3D11DeviceContext* pd3dDeviceContext, CCamera *pCamera);
 
 	static void CreateShaderVariables(ID3D11Device *pd3dDevice);
 	static void ReleaseShaderVariables();
 	static void UpdateShaderVariable(ID3D11DeviceContext *pd3dDeviceContext, float translation);
-//	static void UpdateShaderVariable(ID3D11DeviceContext *pd3dDeviceContext, D3DXMATRIX translation);
 };
 
 class CDetailTexturedIlluminatedShader : public CTexturedIlluminatedShader
@@ -166,16 +182,6 @@ public:
 	CHeightMapTerrain *GetTerrain();
 };
 
-class CWaterBoxShader : public CTexturedIlluminatedShader
-{
-public:
-	CWaterBoxShader();
-	virtual ~CWaterBoxShader();
-
-	virtual void BuildObjects(ID3D11Device *pd3dDevice);
-	virtual void Render(ID3D11DeviceContext* pd3dDeviceContext, CCamera *pCamera);
-
-};
 
 ////////////////////////////////////////////////////
 class CInstancedObjectsShader : public CTexturedShader
