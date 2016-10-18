@@ -131,7 +131,10 @@ public:
 	CWaterBoxShader();
 	virtual ~CWaterBoxShader();
 
-//	static ID3D11Buffer* m_pd3dcbTransparent;
+	ID3D11BlendState* m_alphaDisableBlendingState;
+	ID3D11BlendState* m_alphaEnableBlendingState;
+
+	static ID3D11Buffer* m_pd3dcbTransparent;
 	static ID3D11Buffer* m_pd3dcbTranslation;
 
 	virtual void BuildObjects(ID3D11Device *pd3dDevice);
@@ -139,7 +142,7 @@ public:
 
 	static void CreateShaderVariables(ID3D11Device *pd3dDevice);
 	static void ReleaseShaderVariables();
-	static void UpdateShaderVariable(ID3D11DeviceContext *pd3dDeviceContext, float translation);
+	static void UpdateShaderVariable(ID3D11DeviceContext *pd3dDeviceContext, float translation, float blend);
 };
 
 class CDetailTexturedIlluminatedShader : public CTexturedIlluminatedShader

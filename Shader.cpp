@@ -7,7 +7,9 @@
 
 ID3D11Buffer *CShader::m_pd3dcbWorldMatrix = NULL;
 ID3D11Buffer *CIlluminatedShader::m_pd3dcbMaterial = NULL;
+
 ID3D11Buffer *CWaterBoxShader::m_pd3dcbTranslation = NULL;
+ID3D11Buffer *CWaterBoxShader::m_pd3dcbTransparent = NULL;
 
 CShader::CShader()
 {
@@ -274,7 +276,6 @@ void CTerrainShader::BuildObjects(ID3D11Device *pd3dDevice)
 	pTerrainTexture->SetSampler(1, pd3dDetailSamplerState);
 	pd3dsrvDetailTexture->Release();
 	pd3dDetailSamplerState->Release();
-
 
 	D3DXVECTOR3 d3dxvScale(8.0f, 2.0f, 8.0f);
 	m_ppObjects[0] = new CHeightMapTerrain(pd3dDevice, _T("../../Assets/Image/Terrain/HeightMap.raw"), 257, 257, 257, 257, d3dxvScale);
@@ -665,10 +666,15 @@ void CSkyBoxShader::Render(ID3D11DeviceContext *pd3dDeviceContext, CCamera *pCam
 
 CWaterBoxShader::CWaterBoxShader()
 {
+	m_alphaDisableBlendingState = NULL;
+	m_alphaEnableBlendingState = NULL;
 }
 
 CWaterBoxShader::~CWaterBoxShader()
 {
+	if (m_alphaDisableBlendingState)m_alphaDisableBlendingState->Release();
+	if (m_alphaEnableBlendingState)m_alphaEnableBlendingState->Release();
+
 }
 
 //void CWaterBoxShader::BuildObjects(ID3D11Device* pd3dDevice, CHeightMapTerrain *pHeightMapTerrain)
@@ -691,12 +697,29 @@ void CWaterBoxShader::BuildObjects(ID3D11Device* pd3dDevice)
 	d3dSamplerDesc.MinLOD = 0;
 	pd3dDevice->CreateSamplerState(&d3dSamplerDesc, &pd3dBaseSamplerState);
 	  
-	CTexture *pWaterTexture = new CTexture(1, 1, 0, 0);
+	// 
+	D3D11_BLEND_DESC blendStateDescription;
+	ZeroMemory(&blendStateDescription, sizeof(D3D11_BLEND_DESC));
+	blendStateDescription.RenderTarget[0].BlendEnable = FALSE;
+	blendStateDescription.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendStateDescription.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendStateDescription.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendStateDescription.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendStateDescription.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendStateDescription.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendStateDescription.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+	pd3dDevice->CreateBlendState(&blendStateDescription, &m_alphaDisableBlendingState);
+	//
+	blendStateDescription.RenderTarget[0].BlendEnable = TRUE;
+	pd3dDevice->CreateBlendState(&blendStateDescription, &m_alphaEnableBlendingState);
+
+	CTexture *pWaterTexture = new CTexture(1, 1, 0, 0, 0 );
 	ID3D11ShaderResourceView *pd3dsrvBaseTexture = NULL;
 
 	D3DX11CreateShaderResourceViewFromFile(pd3dDevice, _T("../../Assets/Image/Miscellaneous/water.jpg"), NULL, NULL, &pd3dsrvBaseTexture, NULL);
 	pWaterTexture->SetTexture(0, pd3dsrvBaseTexture);
 	pWaterTexture->SetSampler(0, pd3dBaseSamplerState);
+
 	pd3dsrvBaseTexture->Release();
 	pd3dBaseSamplerState->Release();
 	 
@@ -721,14 +744,14 @@ void CWaterBoxShader::CreateShaderVariables(ID3D11Device *pd3dDevice)
 	d3dBufferDesc.ByteWidth = sizeof(TranslateBufferType);
 	pd3dDevice->CreateBuffer(&d3dBufferDesc, NULL, &m_pd3dcbTranslation);
 
-	//ZeroMemory(&d3dBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	//d3dBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	//d3dBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	//d3dBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	//d3dBufferDesc.ByteWidth = sizeof(TransparentBufferType);
-	//pd3dDevice->CreateBuffer(&d3dBufferDesc, NULL, &m_pd3dcbTransparent);
+	ZeroMemory(&d3dBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	d3dBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	d3dBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	d3dBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	d3dBufferDesc.ByteWidth = sizeof(TransparentBufferType);
+	pd3dDevice->CreateBuffer(&d3dBufferDesc, NULL, &m_pd3dcbTransparent);
 }
-void CWaterBoxShader::UpdateShaderVariable(ID3D11DeviceContext *pd3dDeviceContext, float translation)
+void CWaterBoxShader::UpdateShaderVariable(ID3D11DeviceContext *pd3dDeviceContext, float translation, float blend)
 {
 	D3D11_MAPPED_SUBRESOURCE d3dMappedResource;
 
@@ -739,16 +762,39 @@ void CWaterBoxShader::UpdateShaderVariable(ID3D11DeviceContext *pd3dDeviceContex
 
 	pd3dDeviceContext->Unmap(m_pd3dcbTranslation, 0);
 	pd3dDeviceContext->PSSetConstantBuffers(PS_SLOT_TRANSLATION, 1, &m_pd3dcbTranslation);
+
+	///
+
+	pd3dDeviceContext->Map(m_pd3dcbTransparent, 0, D3D11_MAP_WRITE_DISCARD, 0, &d3dMappedResource);
+	TransparentBufferType *dataPtr2 = (TransparentBufferType *)d3dMappedResource.pData;
+
+	dataPtr2->blendAmount = blend;
+
+	pd3dDeviceContext->Unmap(m_pd3dcbTransparent, 0);
+	pd3dDeviceContext->PSSetConstantBuffers(PS_SLOT_TRANSPARENT, 1, &m_pd3dcbTransparent);
 }
 
 
 void CWaterBoxShader::ReleaseShaderVariables()
 {
 	if (m_pd3dcbTranslation) m_pd3dcbTranslation->Release();
+	if (m_pd3dcbTransparent) m_pd3dcbTransparent->Release();
+
 }
 
 void CWaterBoxShader::Render(ID3D11DeviceContext *pd3dDeviceContext, CCamera *pCamera)
 {
+	float blendFactor[4];
+	float blend = 0.5f;
+
+	// Setup the blend factor.
+	blendFactor[0] = 0.0f;
+	blendFactor[1] = 0.0f;
+	blendFactor[2] = 0.0f;
+	blendFactor[3] = 0.0f;
+
+	// Turn on the alpha blending.
+
 	static float textureTranslation = 0.0f;
 
 	textureTranslation += 0.0001f;
@@ -757,11 +803,13 @@ void CWaterBoxShader::Render(ID3D11DeviceContext *pd3dDeviceContext, CCamera *pC
 		textureTranslation -= 1.0f;
 	}
 
-	CShader::OnPrepareRender(pd3dDeviceContext);
+	CShader::OnPrepareRender(pd3dDeviceContext); 
+	pd3dDeviceContext->OMSetBlendState(m_alphaEnableBlendingState, blendFactor, 0xffffffff);
 
-	UpdateShaderVariable(pd3dDeviceContext, textureTranslation);
+	UpdateShaderVariable(pd3dDeviceContext, textureTranslation, blend);
 
 	m_ppObjects[0]->Render(pd3dDeviceContext, pCamera);
+	pd3dDeviceContext->OMSetBlendState(m_alphaDisableBlendingState, blendFactor, 0xffffffff);
 }
 
 ////////////////////////////////////////////////////////////////////

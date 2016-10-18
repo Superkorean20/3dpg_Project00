@@ -38,6 +38,7 @@
 #define PS_SLOT_LIGHT					0x00
 #define PS_SLOT_MATERIAL				0x01
 #define PS_SLOT_TRANSLATION				0x02
+#define PS_SLOT_TRANSPARENT				0x03
 
 //#define _WITH_SHADER_ROW_MAJOR_MATRIX
 

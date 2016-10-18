@@ -367,11 +367,12 @@ void CGameFramework::FrameAdvance()
 
 	if (m_pScene) m_pScene->Render(m_pd3dDeviceContext, m_pCamera);
 
-
 #ifdef _WITH_PLAYER_TOP
 	m_pd3dDeviceContext->ClearDepthStencilView(m_pd3dDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 #endif
-	if (m_pPlayerShader) m_pPlayerShader->Render(m_pd3dDeviceContext, m_pCamera);
+	if (m_pPlayerShader) 
+		m_pPlayerShader->Render(m_pd3dDeviceContext, m_pCamera);
+
 
 	m_pDXGISwapChain->Present(0, 0);
 

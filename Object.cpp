@@ -87,6 +87,7 @@ void CGameObject::SetTexture(CTexture *pTexture)
 	if (m_pTexture) m_pTexture->AddRef();
 }
 
+
 void CGameObject::GenerateRayForPicking(D3DXVECTOR3 *pd3dxvPickPosition, D3DXMATRIX *pd3dxmtxWorld, D3DXMATRIX *pd3dxmtxView, D3DXVECTOR3 *pd3dxvPickRayPosition, D3DXVECTOR3 *pd3dxvPickRayDirection)
 {
 	D3DXMATRIX d3dxmtxInverse;
@@ -427,7 +428,7 @@ CHeightMapTerrain::~CHeightMapTerrain(void)
 }
 
 
-CTexture::CTexture(int nTextures, int nSamplers, int nTextureStartSlot, int nSamplerStartSlot)
+CTexture::CTexture(int nTextures, int nSamplers, int nTextureStartSlot, int nSamplerStartSlot, int nAlphaBlendStartSlot)
 {
 	m_nReference = 0;
 
@@ -435,17 +436,19 @@ CTexture::CTexture(int nTextures, int nSamplers, int nTextureStartSlot, int nSam
 	m_ppd3dsrvTextures = new ID3D11ShaderResourceView*[m_nTextures];
 	for (int i = 0; i < m_nTextures; i++) m_ppd3dsrvTextures[i] = NULL;
 	m_nTextureStartSlot = nTextureStartSlot;
-	m_nSamplers = nSamplers;
 
+	m_nSamplers = nSamplers;
 	m_ppd3dSamplerStates = new ID3D11SamplerState*[m_nSamplers];
 	for (int i = 0; i < m_nSamplers; i++) m_ppd3dSamplerStates[i] = NULL;
 	m_nSamplerStartSlot = nSamplerStartSlot;
+	 
 }
 
 CTexture::~CTexture()
 {
 	for (int i = 0; i < m_nTextures; i++) if (m_ppd3dsrvTextures[i]) m_ppd3dsrvTextures[i]->Release();
 	for (int i = 0; i < m_nSamplers; i++) if (m_ppd3dSamplerStates[i]) m_ppd3dSamplerStates[i]->Release();
+
 	if (m_ppd3dsrvTextures) delete[] m_ppd3dsrvTextures;
 	if (m_ppd3dSamplerStates) delete[] m_ppd3dSamplerStates;
 }
@@ -459,7 +462,8 @@ void CTexture::SetTexture(int nIndex, ID3D11ShaderResourceView *pd3dsrvTexture)
 
 void CTexture::SetSampler(int nIndex, ID3D11SamplerState *pd3dSamplerState)
 {
-	if (m_ppd3dSamplerStates[nIndex]) m_ppd3dSamplerStates[nIndex]->Release();
+	if (m_ppd3dSamplerStates[nIndex]) 
+		m_ppd3dSamplerStates[nIndex]->Release();
 	m_ppd3dSamplerStates[nIndex] = pd3dSamplerState;
 	if (pd3dSamplerState) pd3dSamplerState->AddRef();
 }
@@ -508,7 +512,7 @@ CWaterBox::CWaterBox(ID3D11Device *pd3dDevice) : CGameObject(1)
 {
 	// 80ÀÌ Àû´ç?
 
-	CWaterBoxMesh *pWaterBoxMesh = new CWaterBoxMesh(pd3dDevice, 2000.0f, 300.0f, 2000.0f, 1.0f);
+	CWaterBoxMesh *pWaterBoxMesh = new CWaterBoxMesh(pd3dDevice, 2000.0f, 80.0f, 2000.0f, 1.0f);
 	SetMesh(pWaterBoxMesh, 0);
 };
 

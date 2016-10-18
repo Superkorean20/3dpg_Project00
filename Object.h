@@ -42,7 +42,7 @@ public:
 class CTexture
 {
 public:
-	CTexture(int nTextures = 1, int nSampler = 1, int nTextureStartSlot = 0, int nSamplerStartSlot = 0);
+	CTexture(int nTextures = 1, int nSampler = 1, int nTextureStartSlot = 0, int nSamplerStartSlot = 0, int nAlphaBlendStartSlot = 0);
 	virtual ~CTexture();
 
 private:
@@ -54,16 +54,16 @@ public:
 
 private:
 	int m_nTextures;
-	ID3D11ShaderResourceView **m_ppd3dsrvTextures;
+	int m_nSamplers;
+	int m_nAlphaBlends;
 
 	int m_nTextureStartSlot;
-
-	int m_nSamplers;
-	ID3D11SamplerState **m_ppd3dSamplerStates;
-
-	// 샘플러 상태 객체를 연결할 시작 슬롯이다.
 	int m_nSamplerStartSlot;
+	int m_nAlphaBlendStartSlot;
 
+	ID3D11ShaderResourceView **m_ppd3dsrvTextures;
+	ID3D11SamplerState **m_ppd3dSamplerStates;
+	
 public:
 	void SetTexture(int nIndex, ID3D11ShaderResourceView *pd3dsrvTexture);
 	void SetSampler(int nIndex, ID3D11SamplerState *pd3dSamplerState);
@@ -232,6 +232,5 @@ class CWaterBox : public CGameObject
 public:
 	CWaterBox(ID3D11Device *pd3dDevice);
 	virtual ~CWaterBox();
-//	virtual void Animate(float fTimeElapsed);
 };
 

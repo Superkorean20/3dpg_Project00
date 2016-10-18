@@ -110,9 +110,9 @@ void CScene::BuildObjects(ID3D11Device *pd3dDevice)
 	m_ppShaders[1]->CreateShader(pd3dDevice);
 	m_ppShaders[1]->BuildObjects(pd3dDevice);
 
-	m_ppShaders[2] = new CWaterBoxShader();
-	m_ppShaders[2]->CreateShader(pd3dDevice);
-	m_ppShaders[2]->BuildObjects(pd3dDevice);
+	//m_ppShaders[2] = new CWaterBoxShader();
+	//m_ppShaders[2]->CreateShader(pd3dDevice);
+	//m_ppShaders[2]->BuildObjects(pd3dDevice);
 
 	// 재질을 생성한다.
 	CMaterial *pRedMaterial = new CMaterial();
@@ -138,21 +138,25 @@ void CScene::BuildObjects(ID3D11Device *pd3dDevice)
 	CInstancedObjectsShader *pStoneInstancedObjectsShader = new CInstancedObjectsShader();
 	pStoneInstancedObjectsShader->CreateShader(pd3dDevice);
 	pStoneInstancedObjectsShader->BuildObjects(pd3dDevice, GetTerrain(), pRedMaterial, pStoneTexture, 0);
-	m_ppShaders[3] = pStoneInstancedObjectsShader;
-//	m_ppShaders[2] = pStoneInstancedObjectsShader;
+//	m_ppShaders[3] = pStoneInstancedObjectsShader;
+	m_ppShaders[2] = pStoneInstancedObjectsShader;
 
 	CInstancedObjectsShader *pBrickInstancedObjectsShader = new CInstancedObjectsShader();
 	pBrickInstancedObjectsShader->CreateShader(pd3dDevice);
 	pBrickInstancedObjectsShader->BuildObjects(pd3dDevice, GetTerrain(), pGreenMaterial, pBrickTexture, 1);
-	m_ppShaders[4] = pBrickInstancedObjectsShader;
-//	m_ppShaders[3] = pBrickInstancedObjectsShader;
+//	m_ppShaders[4] = pBrickInstancedObjectsShader;
+	m_ppShaders[3] = pBrickInstancedObjectsShader;
 
 	CInstancedObjectsShader *pWoodInstancedObjectsShader = new CInstancedObjectsShader();
 	pWoodInstancedObjectsShader->CreateShader(pd3dDevice);
 	pWoodInstancedObjectsShader->BuildObjects(pd3dDevice, GetTerrain(), pBlueMaterial, pWoodTexture, 2);
-	m_ppShaders[5] = pWoodInstancedObjectsShader;
-//	m_ppShaders[4] = pWoodInstancedObjectsShader;
-	
+//	m_ppShaders[5] = pWoodInstancedObjectsShader;
+	m_ppShaders[4] = pWoodInstancedObjectsShader;
+
+	m_ppShaders[5] = new CWaterBoxShader();
+	m_ppShaders[5]->CreateShader(pd3dDevice);
+	m_ppShaders[5]->BuildObjects(pd3dDevice);
+
 	CreateShaderVariables(pd3dDevice);
 }
 
