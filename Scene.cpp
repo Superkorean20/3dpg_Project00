@@ -336,3 +336,13 @@ CGameObject *CScene::PickObjectPointedByCursor(int xClient, int yClient)
 
 
 }
+
+void CScene::UpdateLights(ID3D11DeviceContext* pd3dDeviceContext)
+{
+	D3D11_MAPPED_SUBRESOURCE d3dMappedResource;
+	pd3dDeviceContext->Map(m_pd3dcbLights, 0, D3D11_MAP_WRITE_DISCARD, 0, &d3dMappedResource);
+	LIGHTS *pcbLight = (LIGHTS *)d3dMappedResource.pData;
+	memcpy(pcbLight, m_pLights, sizeof(LIGHTS));
+	pd3dDeviceContext->Unmap(m_pd3dcbLights, 0);
+	pd3dDeviceContext->PSSetConstantBuffers(PS_SLOT_LIGHT, 1, &m_pd3dcbLights);
+}

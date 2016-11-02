@@ -1752,9 +1752,9 @@ CWaterBoxMesh::~CWaterBoxMesh()
 }
 
 CMirrorBoxMesh::CMirrorBoxMesh(ID3D11Device *pd3dDevice, float fWidth, float fHeight, float fDepth, float fScale) : CMeshTexturedIlluminated(pd3dDevice)
-{ 
-	m_nVertices = 6;
-	m_d3dPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+{
+	m_nVertices = 4;
+	m_d3dPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
 
 	m_pd3dxvPositions = new D3DXVECTOR3[m_nVertices];
 	D3DXVECTOR3 *pd3dxvNormals = new D3DXVECTOR3[m_nVertices];
@@ -1771,10 +1771,10 @@ CMirrorBoxMesh::CMirrorBoxMesh(ID3D11Device *pd3dDevice, float fWidth, float fHe
 	m_pd3dxvPositions[i] = D3DXVECTOR3(-fx, -fy, +0.0f); // C
 	pd3dxvTexCoords[i++] = D3DXVECTOR2(0.0f, fs);
 
-	m_pd3dxvPositions[i] = D3DXVECTOR3(-fx, -fy, -0.0f); // C
-	pd3dxvTexCoords[i++] = D3DXVECTOR2(0.0f, fs);
-	m_pd3dxvPositions[i] = D3DXVECTOR3(+fx, +fy, +0.0f); // B
-	pd3dxvTexCoords[i++] = D3DXVECTOR2(fs, 0.0f);
+	//m_pd3dxvPositions[i] = D3DXVECTOR3(-fx, -fy, -0.0f); // C
+	//pd3dxvTexCoords[i++] = D3DXVECTOR2(0.0f, fs);
+	//m_pd3dxvPositions[i] = D3DXVECTOR3(+fx, +fy, +0.0f); // B
+	//pd3dxvTexCoords[i++] = D3DXVECTOR2(fs, 0.0f);
 	m_pd3dxvPositions[i] = D3DXVECTOR3(+fx, -fy, -0.0f); // D
 	pd3dxvTexCoords[i++] = D3DXVECTOR2(fs, fs);
 
@@ -1805,6 +1805,24 @@ CMirrorBoxMesh::CMirrorBoxMesh(ID3D11Device *pd3dDevice, float fWidth, float fHe
 	UINT pnBufferStrides[3] = { sizeof(D3DXVECTOR3), sizeof(D3DXVECTOR3), sizeof(D3DXVECTOR2) };
 	UINT pnBufferOffsets[3] = { 0, 0, 0 };
 	AssembleToVertexBuffer(3, pd3dBuffers, pnBufferStrides, pnBufferOffsets);
+
+	m_nIndices = 4;
+	m_pnIndices = new UINT[m_nIndices];
+
+	m_pnIndices[0] = 0;
+	m_pnIndices[1] = 1;
+	m_pnIndices[2] = 2;
+	m_pnIndices[3] = 3;
+
+	ZeroMemory(&d3dBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	d3dBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	d3dBufferDesc.ByteWidth = sizeof(UINT) * m_nIndices;
+	d3dBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	d3dBufferDesc.CPUAccessFlags = 0;
+
+	ZeroMemory(&d3dBufferData, sizeof(D3D11_SUBRESOURCE_DATA));
+	d3dBufferData.pSysMem = m_pnIndices;
+	pd3dDevice->CreateBuffer(&d3dBufferDesc, &d3dBufferData, &m_pd3dIndexBuffer);
 
 	m_bcBoundingCube.m_d3dxvMinimum = D3DXVECTOR3(-fx, -fy, -fz);
 	m_bcBoundingCube.m_d3dxvMaximum = D3DXVECTOR3(+fx, +fy, +fz);

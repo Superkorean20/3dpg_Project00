@@ -61,6 +61,7 @@ public:
 	void SetCamera(CCamera *pCamera) { m_pCamera = pCamera; }
 
 	CHeightMapTerrain *GetTerrain();
+	void UpdateLights(ID3D11DeviceContext *pd3dDeviceContext);
 
 private:
 	CShader							**m_ppShaders;

@@ -222,7 +222,6 @@ class CSkyBox : public CGameObject
 {
 
 public:
-
 	CSkyBox(ID3D11Device *pd3dDevice);
 	virtual ~CSkyBox();
 
