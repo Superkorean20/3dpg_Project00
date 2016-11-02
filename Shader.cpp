@@ -915,6 +915,7 @@ void CMirrorShader::BuildObjects(ID3D11Device *pd3dDevice, CHeightMapTerrain *pH
 	m_nObjects = 1;
 	m_ppObjects = new CGameObject*[m_nObjects];
 
+	//
 	ID3D11SamplerState *pd3dBaseSamplerState = NULL;
 	D3D11_SAMPLER_DESC d3dSamplerDesc;
 	ZeroMemory(&d3dSamplerDesc, sizeof(D3D11_SAMPLER_DESC));
@@ -926,6 +927,10 @@ void CMirrorShader::BuildObjects(ID3D11Device *pd3dDevice, CHeightMapTerrain *pH
 	d3dSamplerDesc.MaxLOD = 0;
 	d3dSamplerDesc.MinLOD = 0;
 	pd3dDevice->CreateSamplerState(&d3dSamplerDesc, &pd3dBaseSamplerState);
+
+	InitBlendState(pd3dDevice);
+	InitDepthStencilState(pd3dDevice);
+	InitRasterizeState(pd3dDevice);
 
 	CTexture *pMirrorTexture = new CTexture(1, 1, 0, 0, 0);
 	ID3D11ShaderResourceView *pd3dsrvBaseTexture = NULL;
@@ -939,6 +944,8 @@ void CMirrorShader::BuildObjects(ID3D11Device *pd3dDevice, CHeightMapTerrain *pH
 
 	m_ppObjects[0] = new CMirrorBox(pd3dDevice);
 	m_ppObjects[0]->SetTexture(pMirrorTexture);
+
+	m_ppObjects[0]->GetTransform();
 
 	CMaterial *pTerrainMaterial = new CMaterial();
 	pTerrainMaterial->m_Material.m_d3dxcDiffuse = D3DXCOLOR(0.9f, 0.9f, 0.9f, 1.0f);
@@ -954,9 +961,158 @@ void CMirrorShader::BuildObjects(ID3D11Device *pd3dDevice, CHeightMapTerrain *pH
 	m_ppObjects[0]->SetPosition(width / 2 + 50, 0.0f, length / 2 + 50);	// 맵의 중앙에서 '상수'만큼 떨어져있다.
 }
 
-void CMirrorShader::Render(ID3D11DeviceContext* pd3dDeviceContext, CCamera *pCamera)
+void CMirrorShader::Render(ID3D11DeviceContext* pd3dDeviceContext, CCamera* pCamera)
+//void CMirrorShader::Render(ID3D11DeviceContext* pd3dDeviceContext, CCamera* pCamera, ID3D11DepthStencilView* pd3dDepthStencilView)
 {
 	CShader::OnPrepareRender(pd3dDeviceContext);
 
+	// 0
+	//	UINT nClearFlags = D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL;
+	//	pd3dDeviceContext->ClearDepthStencilView(pd3dDepthStencilView, nClearFlags, 1.0f, 0);
+
+	// 1
+	pd3dDeviceContext->OMSetDepthStencilState(m_pd3dMirrorToStencilState, 1);				// 깊이 버퍼는 쓰지 않고, 스텐실 버퍼만 변경한다.
+
+	float pBlendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	pd3dDeviceContext->OMSetBlendState(m_pd3dNoWriteBlendState, pBlendFactor, 0xfffffff);	// 렌더 타겟이 출력하지 않는다.
+
 	m_ppObjects[0]->Render(pd3dDeviceContext, pCamera);
+
+	// 값을 복구한다.
+	pd3dDeviceContext->OMSetBlendState(NULL, pBlendFactor, 0xffffffff);
+	pd3dDeviceContext->OMSetDepthStencilState(NULL, 1);
+
+	//// +++ 거울에 반사된 조명의 위치와 방향을 반영
+	//D3DXMATRIX d3dxmtxReflect;
+	//D3DXPLANE m_d3dxMirrorPlane;
+	//m_d3dxMirrorPlane.a = m_ppObjects[0]->m_d3dxmtxWorld._12
+
+	//D3DXMatrixReflect(&d3dxmtxReflect, &m_d3dxMirrorPlane);
+	//D3DXVECTOR3 pd3dxvLightPos[MAX_LIGHTS], pd3dxvLightDir[MAX_LIGHTS], d3dxvReflect;
+	//for (int i = 0; i < MAX_LIGHTS; i++) {
+	//	pd3dxvLightPos[i] = m_pScene->m_pLights->m_pLights[i].m_d3dxvPosition;
+	//	pd3dxvLightDir[i] = m_pScene->m_pLights->m_pLights[i].m_d3dxvDirection;
+	//	D3DXVec3TransformNormal(&d3dxvReflect, &pd3dxvLightPos[i], &d3dxmtxReflect);
+	//	m_pScene->m_pLights->m_pLights[i].m_d3dxvPosition = d3dxvReflect;
+	//	D3DXVec3TransformNormal(&d3dxvReflect, &pd3dxvLightDir[i], &d3dxmtxReflect);
+	//	m_pScene->m_pLights->m_pLights[i].m_d3dxvDirection = d3dxvReflect;
+	//}
+	//m_pScene->UpdateLights(pd3dDeviceContext);
+	//m_pScene->RenderReflected(pd3dDeviceContext, &d3dxmtxReflect);
+	//for (int i = 0; i < MAX_LIGHTS; i++) {
+	//	m_pScene->m_pLights->m_pLights[i].m_d3dxvPosition = pd3dxvLightPos[i];
+	//	m_pScene->m_pLights->m_pLights[i].m_d3dxvDirection = pd3dxvLightDir[i];
+	//}
+
+
+	//// +++ +++ 반사된 객체를 렌더링 (반사된 조명 이용)
+	//D3DXMATRIX d3dxmtxObject = m_ppObjects[0]->m_d3dxmtxWorld; 
+	//D3DXMatrixMultiply(&m_ppObjects[0]->m_d3dxmtxWorld, &m_ppObjects[0]->m_d3dxmtxWorld, &pd3dmtxReflect);
+	//pd3dDeviceContext->RSSetState(m_pd3dCullCWRasterizeState);
+	//pd3dDeviceContext->OMSetDepthStencilState(m_pd3dReflectDepthStencilState, 1);
+
+	//m_ppObjects[0]->Render(pd3dDeviceContext, pCamera);
+	//m_ppObjects[0]->m_d3dxmtxWorld = d3dxmtxObject;
+
+	// 3
+	pd3dDeviceContext->OMSetBlendState(m_pd3dAlphaBlendState, pBlendFactor, 0xffffffff);
+	pd3dDeviceContext->OMSetDepthStencilState(NULL, 1);
+
+	m_ppObjects[0]->Render(pd3dDeviceContext, pCamera);
+}
+
+
+void CMirrorShader::InitDepthStencilState(ID3D11Device* pd3dDevice)
+{
+	//	Crete_MirrorToStencilState
+	D3D11_DEPTH_STENCIL_DESC d3dDepthStencilDesc;
+	ZeroMemory(&d3dDepthStencilDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	d3dDepthStencilDesc.DepthEnable = true;
+	d3dDepthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+
+	d3dDepthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	d3dDepthStencilDesc.StencilEnable = true;
+	d3dDepthStencilDesc.StencilReadMask = 0xff;
+	d3dDepthStencilDesc.StencilWriteMask = 0xff;
+
+	d3dDepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;		// 스텐실 검사 실패시, 기존 데이터 유지
+	d3dDepthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;	// 깊이 검사 실패, 깊이 검사 성공.
+	d3dDepthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;		// 깊이/스텐실 검사 모두 성공
+	d3dDepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;		// 항상 비교 성공
+
+	d3dDepthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+	d3dDepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	pd3dDevice->CreateDepthStencilState(&d3dDepthStencilDesc, &m_pd3dMirrorToStencilState);
+
+	//	Create_ReflectDSState
+	ZeroMemory(&d3dDepthStencilDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	d3dDepthStencilDesc.DepthEnable = true;
+	d3dDepthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+
+	d3dDepthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	d3dDepthStencilDesc.StencilEnable = true;
+	d3dDepthStencilDesc.StencilReadMask = 0xff;
+	d3dDepthStencilDesc.StencilWriteMask = 0xff;
+
+	d3dDepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;		// 스텐실 검사 실패시, 기존 데이터 유지
+	d3dDepthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;	// 깊이 검사 실패, 깊이 검사 성공.
+	d3dDepthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;		// 깊이/스텐실 검사 모두 성공
+	d3dDepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;			// 
+
+	d3dDepthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+	d3dDepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_EQUAL;
+
+	pd3dDevice->CreateDepthStencilState(&d3dDepthStencilDesc, &m_pd3dReflectDepthStencilState);
+}
+
+void CMirrorShader::InitRasterizeState(ID3D11Device* pd3dDevice)
+{
+	D3D11_RASTERIZER_DESC d3dRasterizerDesc;
+
+	ZeroMemory(&d3dRasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
+	d3dRasterizerDesc.FillMode = D3D11_FILL_SOLID;
+	d3dRasterizerDesc.CullMode = D3D11_CULL_BACK;
+	d3dRasterizerDesc.FrontCounterClockwise = true;
+	d3dRasterizerDesc.DepthClipEnable = true;
+	pd3dDevice->CreateRasterizerState(&d3dRasterizerDesc, &m_pd3dCullCWRasterizeState);
+}
+
+void CMirrorShader::InitBlendState(ID3D11Device* pd3dDevice)
+{
+	D3D11_BLEND_DESC blendStateDescription;
+	ZeroMemory(&blendStateDescription, sizeof(D3D11_BLEND_DESC));
+	blendStateDescription.AlphaToCoverageEnable = false;
+	blendStateDescription.IndependentBlendEnable = false;
+
+	blendStateDescription.RenderTarget[0].BlendEnable = FALSE;
+	blendStateDescription.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendStateDescription.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendStateDescription.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendStateDescription.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendStateDescription.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendStateDescription.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendStateDescription.RenderTarget[0].RenderTargetWriteMask = 0;
+	pd3dDevice->CreateBlendState(&blendStateDescription, &m_pd3dNoWriteBlendState);
+
+
+	ZeroMemory(&blendStateDescription, sizeof(D3D11_BLEND_DESC));
+	blendStateDescription.AlphaToCoverageEnable = false;
+	blendStateDescription.IndependentBlendEnable = false;
+	blendStateDescription.RenderTarget[0].BlendEnable = TRUE;
+	blendStateDescription.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendStateDescription.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendStateDescription.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+
+	blendStateDescription.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendStateDescription.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendStateDescription.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+
+	blendStateDescription.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	pd3dDevice->CreateBlendState(&blendStateDescription, &m_pd3dAlphaBlendState);
 }

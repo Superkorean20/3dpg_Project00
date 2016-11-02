@@ -232,11 +232,26 @@ public:
 
 class CMirrorShader : public CTexturedIlluminatedShader
 {
+protected:
+	ID3D11DepthStencilState		*m_pd3dMirrorToStencilState;
+	ID3D11DepthStencilState		*m_pd3dReflectDepthStencilState;
+
+	ID3D11BlendState			*m_pd3dNoWriteBlendState;
+	ID3D11BlendState			*m_pd3dAlphaBlendState;
+
+	ID3D11RasterizerState		*m_pd3dCullCWRasterizeState;
+
+	//	CScene						*m_pScene;
+
 public:
 	CMirrorShader();
 	virtual ~CMirrorShader();
 
+	void InitDepthStencilState(ID3D11Device *pd3dDevice);
+	void InitBlendState(ID3D11Device *pd3dDevice);
+	void InitRasterizeState(ID3D11Device *pd3dDevice);
+
 	virtual void BuildObjects(ID3D11Device *pd3dDevice, CHeightMapTerrain *pHeightMapTerrain);
 	virtual void Render(ID3D11DeviceContext* pd3dDeviceContext, CCamera *pCamera);
-};
 
+};
